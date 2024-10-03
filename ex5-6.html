@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>TP03 : Web3D avec aframe-physics</title>
+  <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+  <script
+    src="https://cdn.rawgit.com/donmccurdy/aframe-physics-system/v3.3.0/dist/aframe-physics-system.min.js"></script>
+  <script
+    src="https://cdn.rawgit.com/tizzle/aframe-orbit-controls-component/master/dist/aframe-orbit-controls-component.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <a-scene physics>
+    <a-sky src="https://i.postimg.cc/vTRrbQ66/sky.png"></a-sky>
+    <a-plane rotation="-90 0 0" width="30" height="30" src="https://i.postimg.cc/sft6gzRm/grass.png"
+      static-body="damping: 1;" id="ground"></a-plane>
+
+    <a-box id="player" position="0 5 0" color="#f7e2c5" dynamic-body="mass: 1; angularDamping: 1;"></a-box>
+    <a-box position="0 2 2" color="red" dynamic-body="mass: 1;"></a-box>
+    <a-box position="2 2 2" color="blue" dynamic-body="mass: 1;"></a-box>
+    <a-box position="-2 2 2" color="green" dynamic-body="mass: 1;"></a-box>
+    <a-box position="0 2 4" color="yellow" dynamic-body="mass: 1;"></a-box>
+    <a-box position="0 2 0" color="orange" dynamic-body="mass: 1;"></a-box>
+    <a-box position="2 2 0" color="purple" dynamic-body="mass: 1;"></a-box>
+    <a-box position="-2 2 0" color="cyan" dynamic-body="mass: 1;"></a-box>
+    <a-box position="0 2 -2" color="magenta" dynamic-body="mass: 1;"></a-box>
+
+
+
+    <a-entity id="camera" camera position="0 2 5" orbit-controls="
+                autoRotate: false;
+                target: #player;
+                enableDamping: true;
+                dampingFactor: 0.25;
+                rotateSpeed: 0.14;
+                minDistance: 3;
+                maxDistance: 15;">
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const player = document.querySelector('#player');
+    const scene = document.querySelector('a-scene');
+    let isGrounded = false;
+
+    const speed = 10;
+    const jumpForce = 5;
+
+    player.addEventListener('collide', (event) => {
+      if (event.detail.body.el.id === 'ground') {
+        isGrounded = true;
+      }
+    });
+
+    player.addEventListener('leave', (event) => {
+      if (event.detail.body.el.id === 'ground') {
+        isGrounded = false;
+      }
+    });
+
+    window.addEventListener('keydown', (event) => {
+      const velocity = player.body.velocity;
+
+      switch (event.key) {
+        case 'w':
+          velocity.z = -speed;
+          break;
+        case 's':
+          velocity.z = speed;
+          break;
+        case 'a':
+          velocity.x = -speed;
+          break;
+        case 'd':
+          velocity.x = speed;
+          break;
+        case ' ':
+          if (isGrounded) {
+            player.body.applyImpulse(new CANNON.Vec3(0, jumpForce, 0), player.body.position);
+            isGrounded = false;
+          }
+          break;
+      }
+
+      window.addEventListener('keyup', (event) => {
+        if (['w', 's', 'a', 'd'].includes(event.key)) {
+          if (event.key === 'w' || event.key === 's') {
+            velocity.z = 0;
+          } else if (event.key === 'a' || event.key === 'd') {
+            velocity.x = 0;
+          }
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

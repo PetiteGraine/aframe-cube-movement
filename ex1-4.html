@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>TP03 : Web3D sans aframe-physics</title>
+  <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+  <script
+    src="https://cdn.rawgit.com/tizzle/aframe-orbit-controls-component/master/dist/aframe-orbit-controls-component.min.js"></script>
+</head>
+
+<body>
+  <a-scene>
+    <a-sky src="https://i.postimg.cc/vTRrbQ66/sky.png"></a-sky>
+    <a-plane rotation="-90 0 0" width="30" height="30" src="https://i.postimg.cc/sft6gzRm/grass.png"></a-plane>
+
+    <a-box id="player" position="0 0.5 0" color="#f7e2c5"></a-box>
+
+    <a-entity id="camera" camera position="0 2 5" orbit-controls="
+                autoRotate: false;
+                target: #player;
+                enableDamping: true;
+                dampingFactor: 0.25;
+                rotateSpeed:0.14;
+                minDistance:3;
+                maxDistance:15;">
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const player = document.querySelector('#player');
+    const camera = document.querySelector('#camera');
+    const maxSpeed = 0.1;
+    const accelerationRate = 0.002;
+    const decelerationRate = 0.002;
+    const gravity = -0.002;
+    const jumpStrength = 0.1;
+    const groundLevel = 0.5;
+    const stopThreshold = 0.001;
+
+    let velocity = { x: 0, z: 0 };
+    let velocityY = 0;
+    let isJumping = false;
+    let keys = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false,
+      space: false
+    };
+
+    document.addEventListener('keydown', (event) => {
+      switch (event.code) {
+        case 'KeyW':
+          keys.forward = true;
+          break;
+        case 'KeyS':
+          keys.backward = true;
+          break;
+        case 'KeyA':
+          keys.left = true;
+          break;
+        case 'KeyD':
+          keys.right = true;
+          break;
+        case 'Space':
+          if (!isJumping) {
+            isJumping = true;
+            velocityY = jumpStrength;
+          }
+          break;
+      }
+    });
+
+    document.addEventListener('keyup', (event) => {
+      switch (event.code) {
+        case 'KeyW':
+          keys.forward = false;
+          break;
+        case 'KeyS':
+          keys.backward = false;
+          break;
+        case 'KeyA':
+          keys.left = false;
+          break;
+        case 'KeyD':
+          keys.right = false;
+          break;
+      }
+    });
+
+    function updatePlayerMovement() {
+      const position = player.getAttribute('position');
+      const cameraRotation = camera.getAttribute('rotation');
+
+      player.setAttribute('rotation', { x: 0, y: cameraRotation.y, z: 0 });
+
+      const forwardVector = {
+        x: -Math.sin(cameraRotation.y * Math.PI / 180),
+        z: -Math.cos(cameraRotation.y * Math.PI / 180)
+      };
+      const rightVector = {
+        x: Math.cos(cameraRotation.y * Math.PI / 180),
+        z: -Math.sin(cameraRotation.y * Math.PI / 180)
+      };
+
+      if (keys.forward) {
+        velocity.x += forwardVector.x * accelerationRate;
+        velocity.z += forwardVector.z * accelerationRate;
+      }
+      if (keys.backward) {
+        velocity.x -= forwardVector.x * accelerationRate;
+        velocity.z -= forwardVector.z * accelerationRate;
+      }
+      if (keys.left) {
+        velocity.x -= rightVector.x * accelerationRate;
+        velocity.z -= rightVector.z * accelerationRate;
+      }
+      if (keys.right) {
+        velocity.x += rightVector.x * accelerationRate;
+        velocity.z += rightVector.z * accelerationRate;
+      }
+
+      if (!keys.forward && !keys.backward && !keys.left && !keys.right) {
+        if (Math.abs(velocity.x) > stopThreshold) {
+          velocity.x -= Math.sign(velocity.x) * decelerationRate;
+        }
+        if (Math.abs(velocity.z) > stopThreshold) {
+          velocity.z -= Math.sign(velocity.z) * decelerationRate;
+        }
+      }
+
+      const speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+      if (speed > maxSpeed) {
+        velocity.x *= maxSpeed / speed;
+        velocity.z *= maxSpeed / speed;
+      }
+
+      if (Math.abs(velocity.x) < stopThreshold) velocity.x = 0;
+      if (Math.abs(velocity.z) < stopThreshold) velocity.z = 0;
+
+      position.x += velocity.x;
+      position.z += velocity.z;
+
+      if (isJumping) {
+        velocityY += gravity;
+        position.y += velocityY;
+        if (position.y <= groundLevel) {
+          position.y = groundLevel;
+          velocityY = 0;
+          isJumping = false;
+        }
+      }
+
+      player.setAttribute('position', position);
+
+      requestAnimationFrame(updatePlayerMovement);
+    }
+
+    updatePlayerMovement();
+  </script>
+</body>
+
+</html>
