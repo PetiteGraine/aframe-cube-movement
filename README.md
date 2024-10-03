@@ -1,3 +1,3 @@
 # aframe-cube-movement
 ![aframe-physics](https://github.com/user-attachments/assets/ad11dbdf-77f1-4014-8153-34bb2284ba5b)
-https://github.com/user-attachments/assets/d9bf07fe-72aa-4179-a3f0-3abbd6ecd000
+[aframe-physics.webm](https://github.com/user-attachments/assets/9ce23325-80a6-4383-bb1e-14fbf9771cff)
